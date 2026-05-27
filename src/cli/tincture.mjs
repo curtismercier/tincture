@@ -13,11 +13,17 @@
  *   tincture tokens find --legacy <name>       — find which token absorbs a legacy alias
  *   tincture tokens impact <id>                — components + pages affected by changing this
  *   tincture tokens set <id> --light <hex> --dark <hex> — write to registry, regen
- *   tincture mood list                         — list mood presets (cycle 12+)
- *   tincture mood apply <name>                 — apply a mood (cycle 12+)
- *   tincture validate                          — run validator
- *   tincture codegen                           — re-emit _generated/
- *   tincture contrast                          — audit contrast pairs (cycle 10)
+ *   tincture init                              — scaffold registry + foundation in project
+ *   tincture scan                              — find hardcoded colors in CSS / Tailwind / inline
+ *   tincture codegen                           — re-emit _generated/ from registry
+ *   tincture verify                            — check token usage matches declarations
+ *   tincture contrast                          — WCAG 2.1 + APCA matrix per surface
+ *   tincture mood list                         — list mood presets
+ *   tincture mood apply <name>                 — apply a coordinated palette delta
+ *   tincture palette                           — SVG visual of current palette
+ *   tincture preview                           — preview output
+ *   tincture validate                          — run registry validator
+ *   tincture create                            — create a new token
  *
  * Output: human (default) or --json. Exit code 0 success, 1 not-found,
  * 2 invalid-input, 3 substrate-error.
@@ -189,8 +195,9 @@ const verbs = {
   },
 
   'mood apply': () => {
-    out('mood.apply not yet implemented (cycle 12+).');
-    process.exit(2);
+    const name = args[2];
+    if (!name) { console.error('usage: tincture mood apply <name>'); process.exit(2); }
+    execSync(`node ${resolve(__dirname, 'mood.mjs')} apply ${name}`, { cwd: ROOT, stdio: 'inherit' });
   },
 
   'validate': () => {
@@ -198,12 +205,35 @@ const verbs = {
   },
 
   'codegen': () => {
-    execSync(`node ${resolve(__dirname, 'tincture-codegen.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'codegen.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
   },
 
   'contrast': () => {
-    out('contrast.audit not yet implemented (cycle 10).');
-    process.exit(2);
+    execSync(`node ${resolve(__dirname, 'contrast.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+  },
+
+  'init': () => {
+    execSync(`node ${resolve(__dirname, 'init.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+  },
+
+  'scan': () => {
+    execSync(`node ${resolve(__dirname, 'scan-css.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+  },
+
+  'verify': () => {
+    execSync(`node ${resolve(__dirname, 'verify.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+  },
+
+  'palette': () => {
+    execSync(`node ${resolve(__dirname, 'palette.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+  },
+
+  'preview': () => {
+    execSync(`node ${resolve(__dirname, 'preview.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+  },
+
+  'create': () => {
+    execSync(`node ${resolve(__dirname, 'create.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
   },
 };
 

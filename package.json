@@ -1,6 +1,6 @@
 {
   "name": "@tincture/core",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "description": "A drop changes the whole pour. Surface-aware design substrate for AI-mediated theming.",
   "type": "module",
   "license": "MIT",

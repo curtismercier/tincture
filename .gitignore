@@ -38,3 +38,8 @@ REVAMP-WIP.md
 README.draft*.md
 *.mjs.draft
 *.md.draft
+
+# ── Soma context (planning, cycles, drafts) ───────────────────────
+.soma/
+# (the cycle drafts, WIP plans, and arzadon proving-ground copies
+#  that were scattered across root/scripts/references now live here
