@@ -50,8 +50,20 @@ const arg = (f, fallback) => {
   return args[i + 1] ?? fallback;
 };
 
-const registryPath = arg('registry', resolve(process.cwd(), 'tincture/registry.json')) ||
-                     resolve(process.cwd(), 'src/styles/tincture/registry.json');
+let registryPath = arg('registry');
+if (!registryPath) {
+  // Try _resolve-config.mjs first, then fall back to common locations
+  try {
+    const cfg = await import('./_resolve-config.mjs');
+    registryPath = cfg.REGISTRY_PATH;
+  } catch {
+    const candidates = [
+      resolve(process.cwd(), 'tincture/registry.json'),
+      resolve(process.cwd(), 'src/styles/tincture/registry.json'),
+    ];
+    registryPath = candidates.find(f => existsSync(f)) || candidates[0];
+  }
+}
 const surfaceFilter = arg('surface', null);
 
 if (!existsSync(registryPath)) {
