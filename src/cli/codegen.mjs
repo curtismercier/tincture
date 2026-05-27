@@ -35,7 +35,7 @@ const skipValidate = process.argv.includes('--skip-validate');
 // 1. Run validator
 if (!skipValidate) {
   try {
-    execSync(`node ${resolve(__dirname, 'tincture-validate-registry.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'validate.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
   } catch {
     console.error('\nx codegen aborted: registry validation failed.');
     process.exit(1);

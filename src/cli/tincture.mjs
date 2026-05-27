@@ -233,7 +233,7 @@ const verbs = {
     if (light) reg.semantic[id].lightValue = light;
     if (dark) reg.semantic[id].darkValue = dark;
     writeFileSync(REGISTRY_PATH, JSON.stringify(reg, null, 2) + '\n', 'utf8');
-    execSync(`node ${resolve(__dirname, 'codegen.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'codegen.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
     console.log(`\n  ✓ ${id} updated\n`);
   },
 
@@ -259,53 +259,53 @@ const verbs = {
   'mood apply': () => {
     const name = args[2];
     if (!name) { console.error('usage: tincture mood apply <name>'); process.exit(2); }
-    execSync(`node ${resolve(__dirname, 'mood.mjs')} apply ${name}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'mood.mjs')} apply ${name}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   // ── Pipeline stages ──────────────────────────────────────────────────
 
   init: () => {
-    execSync(`node ${resolve(__dirname, 'init.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'init.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   codegen: () => {
-    execSync(`node ${resolve(__dirname, 'codegen.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'codegen.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   validate: () => {
-    execSync(`node ${resolve(__dirname, 'validate.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'validate.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   create: () => {
-    execSync(`node ${resolve(__dirname, 'create.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'create.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   scan: () => {
-    execSync(`node ${resolve(__dirname, 'scan-css.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'scan-css.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   'scan-tailwind': () => {
-    execSync(`node ${resolve(__dirname, 'scan-tailwind.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'scan-tailwind.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   verify: () => {
-    execSync(`node ${resolve(__dirname, 'verify.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'verify.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   contrast: () => {
-    execSync(`node ${resolve(__dirname, 'contrast.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'contrast.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   'apply-typography': () => {
-    execSync(`node ${resolve(__dirname, 'apply-typography.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'apply-typography.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   palette: () => {
-    execSync(`node ${resolve(__dirname, 'palette.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'palette.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 
   preview: () => {
-    execSync(`node ${resolve(__dirname, 'preview.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`node ${resolve(__dirname, 'preview.mjs')}`, { cwd: process.cwd(), stdio: 'inherit' });
   },
 };
 
