@@ -81,7 +81,7 @@ ok('foundation contains --space-section', foundation1.includes('--space-section:
 ok('foundation contains --shadow-lifted', foundation1.includes('--shadow-lifted:'));
 ok('foundation contains --brand-mark-primary', foundation1.includes('--brand-mark-primary:'));
 ok('foundation contains version sentinel',
-   foundation1.includes('--tincture-foundation-version: "0.2.0-alpha"'));
+   foundation1.includes('--tincture-foundation-version: "0.2.2"'));
 
 // CRITICAL: NO light-dark() in v0.2 codegen output
 ok('foundation has ZERO light-dark() calls', !foundation1.includes('light-dark('),
@@ -107,7 +107,7 @@ ok('1-axis rules appear before 2-axis (tone-feature < elevation=dramatic,surface
 // ── manifest.json shape ──────────────────────────────────────────────
 const manifest = JSON.parse(manifest1);
 ok('manifest has schemaVersion 2.0', manifest.schemaVersion === '2.0');
-ok('manifest registry version matches', manifest.registry.version === '0.2.0-alpha');
+ok('manifest registry version matches', manifest.registry.version === '0.2.2');
 ok('manifest tokens.ink exists', manifest.tokens.ink !== undefined);
 ok('manifest tokens.ink has axes', JSON.stringify(manifest.tokens.ink.axes) === JSON.stringify(['surface', 'flavor']));
 ok('manifest tokens.ink has defaultValue', manifest.tokens.ink.defaultValue === '#1A1612');

@@ -1,11 +1,14 @@
 {
-  "version": "0.2.0-alpha",
+  "version": "0.2.2",
   "name": "tincture/v0.2-example",
   "doc": "Example registry exercising the multi-axis schema. Used by tests/test-schema.mjs as the reference good registry. Mirrors the cycles/v02-scope.md examples.",
   "tokens": {
     "ink": {
       "kind": "color",
-      "axes": ["surface", "flavor"],
+      "axes": [
+        "surface",
+        "flavor"
+      ],
       "doc": "Primary text color. Surface-aware luminance, flavor-aware hue.",
       "values": {
         "default": "#1A1612",
@@ -16,7 +19,9 @@
     },
     "ink-soft": {
       "kind": "color",
-      "axes": ["surface"],
+      "axes": [
+        "surface"
+      ],
       "doc": "Secondary text. Body copy, captions.",
       "values": {
         "default": "#4A4540",
@@ -25,7 +30,10 @@
     },
     "bg": {
       "kind": "color",
-      "axes": ["surface", "flavor"],
+      "axes": [
+        "surface",
+        "flavor"
+      ],
       "doc": "Page background. Surface + flavor aware.",
       "values": {
         "default": "#F7F4F0",
@@ -36,7 +44,10 @@
     },
     "accent": {
       "kind": "color",
-      "axes": ["surface", "flavor"],
+      "axes": [
+        "surface",
+        "flavor"
+      ],
       "doc": "Primary accent. Saturated red on dark, deep crimson on light.",
       "values": {
         "default": "#C41E3A",
@@ -53,7 +64,9 @@
     },
     "weight-display": {
       "kind": "typography",
-      "axes": ["surface"],
+      "axes": [
+        "surface"
+      ],
       "doc": "Display headline weight. Heavier on dark surfaces for legibility.",
       "values": {
         "default": "700",
@@ -84,7 +97,9 @@
     },
     "space-section": {
       "kind": "spacing",
-      "axes": ["tone"],
+      "axes": [
+        "tone"
+      ],
       "doc": "Vertical padding on sections. Feature sections breathe more; brand-bands are tight.",
       "values": {
         "default": "5rem",
@@ -115,7 +130,10 @@
     },
     "shadow-lifted": {
       "kind": "shadow",
-      "axes": ["surface", "elevation"],
+      "axes": [
+        "surface",
+        "elevation"
+      ],
       "doc": "Card / elevated surface shadow. Heavier on dark, even more dramatic at elevation=dramatic.",
       "values": {
         "default": "0 8px 24px rgba(0,0,0,0.08)",
@@ -181,7 +199,9 @@
     },
     "shadow-card": {
       "kind": "shadow",
-      "axes": ["surface"],
+      "axes": [
+        "surface"
+      ],
       "doc": "Soft layered shadow for cards (Linear/Stripe-style). Pairs with --border for definition. Subtle on light, heavier on dark.",
       "values": {
         "default": "0 1px 3px rgba(15, 20, 30, 0.04), 0 1px 2px rgba(15, 20, 30, 0.03)",
@@ -190,7 +210,9 @@
     },
     "shadow-card-hover": {
       "kind": "shadow",
-      "axes": ["surface"],
+      "axes": [
+        "surface"
+      ],
       "doc": "Card lift on hover/active. Slightly stronger than --shadow-card.",
       "values": {
         "default": "0 4px 12px rgba(15, 20, 30, 0.06), 0 1px 3px rgba(15, 20, 30, 0.04)",
@@ -201,7 +223,7 @@
       "kind": "brand-lock",
       "axes": [],
       "locked": true,
-      "doc": "Brand primary mark. Immutable — moods cannot override.",
+      "doc": "Brand primary mark. Immutable \u2014 moods cannot override.",
       "values": {
         "default": "#EF4123"
       }

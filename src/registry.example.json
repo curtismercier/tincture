@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.2",
   "name": "my-brand/tincture",
   "doc": "Token registry for the Arzadon tenant. Cycle 4 of the Tincture project (proving ground). Cycle 16 extracts the substrate to a standalone package.",
   "axes": {
@@ -65,19 +65,19 @@
       },
       "accent-crimson": {
         "value": "#C41E3A",
-        "doc": "Strong crimson — cycle 1 light-side accent."
+        "doc": "Strong crimson \u2014 cycle 1 light-side accent."
       },
       "accent-vivid": {
         "value": "#E82E11",
-        "doc": "Vivid red-orange — cycle 1 dark-side accent."
+        "doc": "Vivid red-orange \u2014 cycle 1 dark-side accent."
       },
       "accent-fg": {
         "value": "#FFFFFF",
-        "doc": "White ink on saturated accent surface — always."
+        "doc": "White ink on saturated accent surface \u2014 always."
       },
       "border-accent-tint": {
         "value": "rgba(232, 46, 17, 0.18)",
-        "doc": "Accent-vivid (#E82E11) at 18% alpha — dark surface border tint."
+        "doc": "Accent-vivid (#E82E11) at 18% alpha \u2014 dark surface border tint."
       },
       "border-accent-tint-soft": {
         "value": "rgba(232, 46, 17, 0.10)",
@@ -308,7 +308,7 @@
         "light",
         "dark"
       ],
-      "doc": "Renders on whatever surface the page provides. 74 token references — most token-dense component in the tenant.",
+      "doc": "Renders on whatever surface the page provides. 74 token references \u2014 most token-dense component in the tenant.",
       "tokens-read": [
         "accent",
         "accent-fg",

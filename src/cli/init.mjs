@@ -98,7 +98,7 @@ const FOUNDATION_CSS = `/* ─────────────────�
 
   /* Sentinel: never edit this in a mood preset \u2014 used to detect
      whether tincture/foundation.css was successfully imported. */
-  --tincture-foundation-version: "0.1.0";
+  --tincture-foundation-version: "0.2.2";
 }
 
 /* ── Sanity tests for during migration ──

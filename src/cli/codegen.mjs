@@ -1,214 +1,262 @@
 #!/usr/bin/env node
 /**
- * tincture-codegen.mjs — cycle 5.
+ * codegen.mjs — multi-axis Tincture codegen (canonical).
  *
- * Reads tincture/registry.json and emits 4 derivative files:
- *   - tincture/_generated/foundation.css   (light-dark() core token block)
- *   - tincture/_generated/flavors.css      (flavor override blocks)
- *   - tincture/_generated/manifest.json    (flat shape for designer studio)
- *   - tincture/_generated/tokens.d.ts      (TS union types)
+ * Reads a v0.2 registry (validated via src/schema.mjs) and emits:
+ *   - <out>/foundation.css   — cascade rules per axis-cell
+ *   - <out>/manifest.json    — flat shape: { tokens[id]: { defaultValue, cells[] } }
+ *   - <out>/tokens.d.ts      — TS union of token IDs
  *
- * Pipeline:
- *   1. Run tincture-validate-registry.mjs (fail-fast on drift)
- *   2. Read registry.json
- *   3. Resolve primitive references
- *   4. Emit each artifact deterministically
+ * Output is deterministic and byte-identical across runs (idempotent).
  *
- * Idempotent: re-running produces byte-identical output. CI can verify.
+ * Cascade strategy:
+ *   - :root gets default value
+ *   - [data-<axis>=<value>] selectors override per single-axis cell
+ *   - Compound selectors [data-axis1=v1][data-axis2=v2] stack specificity
+ *   - Order of emission: default → 1-axis → 2-axis → 3-axis (ascending)
+ *
+ * Run via CLI: tincture codegen
+ *   Or direct: node src/cli/codegen.mjs --registry <path> --out <dir>
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, basename } from 'node:path';
+import { validateRegistry, AXES } from '../schema.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = process.cwd(); // consumer project root
-import { REGISTRY_PATH, OUT_DIR } from './_resolve-config.mjs';
-const TINCTURE = REGISTRY_PATH.replace(/\/registry\.json$/, '');
-const GENERATED = resolve(TINCTURE, '_generated');
-const REGISTRY = resolve(TINCTURE, 'registry.json');
 
-const dry = process.argv.includes('--dry');
-const skipValidate = process.argv.includes('--skip-validate');
+// ── arg parsing ─────────────────────────────────────────────────────
+function arg(name, fallback) {
+  const i = process.argv.indexOf(name);
+  return i >= 0 ? process.argv[i + 1] : fallback;
+}
 
-// 1. Run validator
-if (!skipValidate) {
+// Path resolution: --registry/--out flags → _resolve-config.mjs → defaults
+let REGISTRY_PATH = arg('--registry');
+let OUT_DIR = arg('--out');
+if (!REGISTRY_PATH || !OUT_DIR) {
   try {
-    execSync(`node ${resolve(__dirname, 'validate.mjs')}`, { cwd: ROOT, stdio: 'inherit' });
-  } catch {
-    console.error('\nx codegen aborted: registry validation failed.');
-    process.exit(1);
-  }
+    const cfg = await import('./_resolve-config.mjs');
+    if (!REGISTRY_PATH) REGISTRY_PATH = cfg.REGISTRY_PATH;
+    if (!OUT_DIR) OUT_DIR = cfg.OUT_DIR;
+  } catch {}
+}
+REGISTRY_PATH = resolve(REGISTRY_PATH ?? resolve(process.cwd(), 'tincture/registry.json'));
+OUT_DIR = resolve(OUT_DIR ?? resolve(process.cwd(), 'tincture/_generated'));
+const QUIET = process.argv.includes('--quiet');
+
+// ── load + validate ─────────────────────────────────────────────────
+const reg = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'));
+const result = validateRegistry(reg);
+if (!result.ok) {
+  console.error(`✗ registry validation failed:`);
+  for (const e of result.errors) console.error(`  - ${e}`);
+  process.exit(1);
 }
 
-// 2. Load registry
-const reg = JSON.parse(readFileSync(REGISTRY, 'utf8'));
+// ── helpers ─────────────────────────────────────────────────────────
 
-// 3. Resolve primitive refs
-function resolveRef(value, prim) {
-  if (typeof value !== 'string') return value;
-  const m = value.match(/^\{primitives\.color\.([^}]+)\}$/);
-  if (!m) return value;
-  return prim?.color?.[m[1]]?.value ?? value;
+/** Parse a cell key into ordered [axis, value] pairs (or [] for default). */
+function parseCell(key) {
+  if (key === 'default') return [];
+  return key.split(',').map(p => p.split('='));
 }
 
-// 4. Emit foundation.css
-function emitFoundation() {
+/** Selector for a cell key. 'default' → ':root'; axes → '[data-X=Y][data-W=Z]'. */
+function cellSelector(key) {
+  if (key === 'default') return ':root';
+  return parseCell(key).map(([a, v]) => `[data-${a}="${v}"]`).join('');
+}
+
+/** Sort cell keys: default first, then by axis count ascending, then alpha. */
+function sortCellKeys(keys) {
+  return [...keys].sort((a, b) => {
+    if (a === 'default') return -1;
+    if (b === 'default') return 1;
+    const ca = a.split(',').length;
+    const cb = b.split(',').length;
+    if (ca !== cb) return ca - cb;
+    return a.localeCompare(b);
+  });
+}
+
+// ── emit foundation.css ──────────────────────────────────────────────
+function emitFoundationCSS() {
   const lines = [];
-  lines.push(`/* GENERATED by tincture-codegen.mjs from registry.json — do not edit. */`);
+  lines.push(`/* GENERATED by tincture/codegen-v2.mjs — do not edit by hand. */`);
+  lines.push(`/* Registry: ${reg.name || '(unnamed)'} v${reg.version} */`);
   lines.push(`/* Run: pnpm tincture:codegen */`);
   lines.push(``);
-  lines.push(`:root {`);
-  lines.push(`  /* Default scheme: light. Components inside [data-surface=dark] flip. */`);
-  lines.push(`  color-scheme: light dark;`);
-  lines.push(`}`);
-  lines.push(``);
-  lines.push(`/* Surface declarations */`);
-  lines.push(`[data-surface="dark"]  { color-scheme: dark; }`);
-  lines.push(`[data-surface="light"] { color-scheme: light; }`);
-  lines.push(``);
-  lines.push(`:root {`);
-  for (const [id, tok] of Object.entries(reg.semantic)) {
-    const light = resolveRef(tok.lightValue, reg.primitives);
-    const dark = resolveRef(tok.darkValue, reg.primitives);
-    const doc = tok.doc ? `  /* ${tok.doc} */\n` : '';
-    lines.push(`${doc}  --${id}: light-dark(${light}, ${dark});`);
-  }
-  lines.push(``);
-  lines.push(`  --tincture-foundation-version: "${reg.version}";`);
-  lines.push(`}`);
-  lines.push('');
-  return lines.join('\n');
-}
 
-// 5. Emit flavors.css
-function emitFlavors() {
-  const lines = [];
-  lines.push(`/* GENERATED by tincture-codegen.mjs from registry.json — do not edit. */`);
-  lines.push(``);
-  for (const [name, flavor] of Object.entries(reg.flavors)) {
-    lines.push(`/* ${name} — ${flavor.doc ?? ''} */`);
-    lines.push(`[data-flavor="${name}"] {`);
-    if (Object.keys(flavor.overrides ?? {}).length === 0) {
-      lines.push(`  /* (no overrides — foundation values represent ${name}) */`);
-    } else {
-      for (const [tokId, vals] of Object.entries(flavor.overrides)) {
-        const light = vals.lightValue ? resolveRef(vals.lightValue, reg.primitives) : null;
-        const dark = vals.darkValue ? resolveRef(vals.darkValue, reg.primitives) : null;
-        if (light && dark) {
-          lines.push(`  --${tokId}: light-dark(${light}, ${dark});`);
+  // Auto-fill axis-value reset cells.
+  //
+  // Why: cascade composition is broken if a token declares axis=X with
+  // only SOME values present. E.g. token `--ink` has axes:['surface'] and
+  // values { default: '#1A1612', 'surface=dark': '#fff' }. The output:
+  //   :root                     { --ink: #1A1612 }
+  //   [data-surface="dark"]     { --ink: #fff }
+  //   [data-surface="light"]    { /* empty — NO --ink override */ }
+  // Now if a descendant of [data-surface="dark"] declares
+  // [data-surface="light"], it inherits --ink: #fff (from the dark
+  // ancestor) instead of resetting to #1A1612. Bug.
+  //
+  // Fix: for every token T with axes A, for every value V of every axis
+  // in A, ensure T has a value at V. Auto-fill missing values from the
+  // default (or the most-specific declared compound cell). The reset
+  // value re-declares default explicitly, so a sibling [data-X=other-V]
+  // resets correctly via cascade.
+  const AXIS_VALUES_RUNTIME = {
+    surface: ['light', 'dark'],
+    flavor: ['cool', 'warm', 'ember'],
+    tone: ['feature', 'prose', 'surface', 'brand-band'],
+    elevation: ['flat', 'lifted', 'dramatic'],
+  };
+
+  function autoFillToken(tok) {
+    if (tok.axes.length === 0) return tok.values; // no axes → no fill
+    const filled = { ...tok.values };
+    // For each axis the token responds to, ensure every axis-value is
+    // either explicitly declared OR inherits the default. We add a
+    // single-axis cell for the default value of each axis-value that
+    // doesn't already exist as a single-axis cell.
+    for (const axis of tok.axes) {
+      for (const value of AXIS_VALUES_RUNTIME[axis] || []) {
+        const cellKey = `${axis}=${value}`;
+        if (filled[cellKey] === undefined) {
+          filled[cellKey] = filled.default;
         }
       }
     }
+    return filled;
+  }
+
+  // Collect all (cellKey → [{tokenId, value}]) so we emit one rule per
+  // unique cellKey (group all tokens for that cell into one CSS block).
+  // This produces denser output AND keeps cascade specificity uniform.
+  const cellGroups = new Map(); // cellKey → [{ id, value, doc }]
+  for (const [tokenId, tok] of Object.entries(reg.tokens)) {
+    const filled = autoFillToken(tok);
+    for (const [cellKey, value] of Object.entries(filled)) {
+      if (!cellGroups.has(cellKey)) cellGroups.set(cellKey, []);
+      cellGroups.get(cellKey).push({ id: tokenId, value, doc: tok.doc });
+    }
+  }
+
+  // Emit in the canonical order
+  for (const cellKey of sortCellKeys([...cellGroups.keys()])) {
+    const tokens = cellGroups.get(cellKey);
+    const selector = cellSelector(cellKey);
+
+    if (cellKey === 'default') {
+      lines.push(`/* :root — default values for every token. */`);
+    } else {
+      lines.push(`/* ${cellKey} */`);
+    }
+    lines.push(`${selector} {`);
+
+    // Special: default cell ALSO gets color-scheme from surface axis
+    // (so :root has color-scheme: light by default, [data-surface=dark]
+    //  has color-scheme: dark, [data-surface=light] has color-scheme: light)
+    if (cellKey === 'default') {
+      lines.push(`  color-scheme: light;`);
+    } else if (cellKey === 'surface=dark') {
+      lines.push(`  color-scheme: dark;`);
+    } else if (cellKey === 'surface=light') {
+      lines.push(`  color-scheme: light;`);
+    }
+
+    // Sort token IDs alphabetically for determinism
+    const sortedTokens = [...tokens].sort((a, b) => a.id.localeCompare(b.id));
+    for (const t of sortedTokens) {
+      if (cellKey === 'default' && t.doc) {
+        lines.push(`  /* ${t.doc} */`);
+      }
+      lines.push(`  --${t.id}: ${t.value};`);
+    }
+
+    // Sentinel only on :root
+    if (cellKey === 'default') {
+      lines.push(``);
+      lines.push(`  --tincture-foundation-version: "${reg.version}";`);
+    }
+
     lines.push(`}`);
     lines.push(``);
   }
+
   return lines.join('\n');
 }
 
-// 6. Emit manifest.json (flat shape for studio)
+// ── emit manifest.json ───────────────────────────────────────────────
 function emitManifest() {
+  // Flat shape designed for studio designer + manifest-loader consumption.
   const tokens = {};
-  for (const [id, tok] of Object.entries(reg.semantic)) {
-    tokens[id] = {
-      type: tok.type,
-      lightValue: resolveRef(tok.lightValue, reg.primitives),
-      darkValue: resolveRef(tok.darkValue, reg.primitives),
-      doc: tok.doc ?? '',
-      role: tok.role ?? null,
-      contrastPair: tok.contrastPair ?? null,
-      legacy: tok.legacy ?? [],
+  for (const [tokenId, tok] of Object.entries(reg.tokens).sort(([a], [b]) => a.localeCompare(b))) {
+    tokens[tokenId] = {
+      kind: tok.kind,
+      axes: tok.axes,
+      locked: !!tok.locked,
+      doc: tok.doc || '',
+      defaultValue: tok.values.default,
+      cells: sortCellKeys(Object.keys(tok.values)).map(key => ({
+        cell: key,
+        value: tok.values[key],
+        selector: cellSelector(key),
+      })),
     };
   }
-  const flavors = {};
-  for (const [name, f] of Object.entries(reg.flavors)) {
-    flavors[name] = {
-      doc: f.doc ?? '',
-      overrides: Object.fromEntries(
-        Object.entries(f.overrides ?? {}).map(([k, v]) => [
-          k,
-          {
-            lightValue: v.lightValue ? resolveRef(v.lightValue, reg.primitives) : null,
-            darkValue: v.darkValue ? resolveRef(v.darkValue, reg.primitives) : null,
-          },
-        ]),
-      ),
-    };
-  }
-  return JSON.stringify(
-    {
+  return JSON.stringify({
+    schemaVersion: '2.0',
+    registry: {
       version: reg.version,
-      generated: '2026-04-30',
-      axes: reg.axes,
-      tokens,
-      flavors,
-      components: reg.components ?? {},
+      name: reg.name || null,
+      doc: reg.doc || null,
     },
-    null,
-    2,
-  ) + '\n';
+    axes: AXES,
+    tokens,
+  }, null, 2) + '\n';
 }
 
-// 7. Emit tokens.d.ts
-function emitTypes() {
-  const ids = Object.keys(reg.semantic).map((id) => `  | '${id}'`).join('\n');
-  const compIds = Object.keys(reg.components ?? {}).map((id) => `  | '${id}'`).join('\n');
-  const flavorIds = Object.keys(reg.flavors).map((id) => `  | '${id}'`).join('\n');
-  return `// GENERATED by tincture-codegen.mjs from registry.json — do not edit.
-
-export type SemanticToken =
-${ids};
-
-export type Flavor =
-${flavorIds};
-
-export type Surface = 'light' | 'dark';
-
-export type ComponentName =
-${compIds};
-
-export type ColorMode = 'light' | 'dark';
-
-export interface TokenManifest {
-  type: 'color' | 'space' | 'radius' | 'shadow';
-  lightValue: string;
-  darkValue: string;
-  doc: string;
-  role: string | null;
-  contrastPair: string | null;
-  legacy: string[];
-}
-`;
+// ── emit tokens.d.ts ─────────────────────────────────────────────────
+function emitTokenTypes() {
+  const ids = Object.keys(reg.tokens).sort();
+  const union = ids.length === 0 ? 'never' : ids.map(id => JSON.stringify(id)).join(' | ');
+  return [
+    `// GENERATED by tincture/codegen-v2.mjs — do not edit by hand.`,
+    `// Registry: ${reg.name || '(unnamed)'} v${reg.version}`,
+    ``,
+    `/** Union of every token ID in the registry. */`,
+    `export type TokenId = ${union};`,
+    ``,
+    `/** All token IDs as a tuple (use \`as const\` for inference). */`,
+    `export const TOKEN_IDS = [${ids.map(id => JSON.stringify(id)).join(', ')}] as const;`,
+    ``,
+  ].join('\n');
 }
 
-// 8. Write artifacts
-const artifacts = [
-  { path: 'foundation.css', content: emitFoundation() },
-  { path: 'flavors.css',    content: emitFlavors() },
-  { path: 'manifest.json',  content: emitManifest() },
-  { path: 'tokens.d.ts',    content: emitTypes() },
-];
-
-if (!existsSync(GENERATED)) {
-  if (!dry) mkdirSync(GENERATED, { recursive: true });
-}
-
-const written = [];
-for (const { path, content } of artifacts) {
-  const full = resolve(GENERATED, path);
-  const existing = existsSync(full) ? readFileSync(full, 'utf8') : null;
-  if (existing === content) {
-    written.push({ path, status: 'unchanged' });
-    continue;
+// ── write artifacts ──────────────────────────────────────────────────
+function writeIfChanged(path, content) {
+  let prev = '';
+  try { prev = readFileSync(path, 'utf8'); } catch {}
+  if (prev === content) {
+    if (!QUIET) console.log(`  unchanged  ${basename(path)}`);
+    return false;
   }
-  if (!dry) writeFileSync(full, content, 'utf8');
-  written.push({ path, status: existing === null ? 'created' : 'updated' });
+  if (!existsSync(dirname(path))) mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, content);
+  if (!QUIET) console.log(`  written    ${basename(path)} (${content.length} bytes)`);
+  return true;
 }
 
-console.log('\ntincture-codegen — cycle 5');
-console.log(`mode: ${dry ? 'dry-run' : 'apply'}`);
-for (const w of written) console.log(`  ${w.status.padEnd(10)} ${w.path}`);
-console.log('');
-const changed = written.filter((w) => w.status !== 'unchanged').length;
-console.log(`  ${changed} file(s) ${dry ? 'would change' : 'changed'}.`);
+const foundation = emitFoundationCSS();
+const manifest = emitManifest();
+const tokenTypes = emitTokenTypes();
+
+let changed = 0;
+if (writeIfChanged(resolve(OUT_DIR, 'foundation.css'), foundation)) changed++;
+if (writeIfChanged(resolve(OUT_DIR, 'manifest.json'), manifest)) changed++;
+if (writeIfChanged(resolve(OUT_DIR, 'tokens.d.ts'), tokenTypes)) changed++;
+
+if (!QUIET) console.log(`\n${changed} file(s) changed.`);
+process.exit(0);

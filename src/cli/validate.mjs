@@ -1,169 +1,51 @@
 #!/usr/bin/env node
 /**
- * tincture-validate-registry.mjs — cycle 4.
+ * validate.mjs — registry validation via schema.mjs
  *
- * Walks tincture/registry.json and verifies:
- *   1. Schema integrity (required fields per token type)
- *   2. Primitive references resolve ({primitives.color.X} exists)
- *   3. Foundation token VALUES match registry's lightValue/darkValue
- *      (so registry can't drift from the actual CSS)
- *   4. Component manifests reference tokens that exist in registry
- *   5. Legacy aliases don't conflict (no two tokens claim same legacy name)
- *
- * Exit 0 if clean. Non-zero with diagnostic on failure.
+ * Validates a Tincture registry.json against the canonical schema
+ * defined in src/schema.mjs. Covers:
+ *   - Required fields per token type
+ *   - Axis-cell key format
+ *   - Default cell requirement
+ *   - Locked token constraints
  *
  * Usage:
- *   node scripts/tincture-validate-registry.mjs
- *   node scripts/tincture-validate-registry.mjs --verbose
+ *   tincture validate                          # uses _resolve-config.mjs
+ *   node src/cli/validate.mjs --registry <path>
+ *
+ * Exit 0 if valid, 1 if validation errors.
  */
 
 import { readFileSync, existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
+import { validateRegistry } from '../schema.mjs';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-import { REGISTRY_PATH as REGISTRY } from './_resolve-config.mjs';
-const FOUNDATION = REGISTRY.replace('registry.json', 'foundation.css');
+let REGISTRY_PATH;
+try {
+  const { REGISTRY_PATH: p } = await import('./_resolve-config.mjs');
+  REGISTRY_PATH = p;
+} catch {
+  const args = process.argv.slice(2);
+  const idx = args.indexOf('--registry');
+  REGISTRY_PATH = idx >= 0
+    ? resolve(process.cwd(), args[idx + 1])
+    : resolve(process.cwd(), 'tincture/registry.json');
+}
 
-
-const verbose = process.argv.includes('--verbose');
-const errors = [];
-const warnings = [];
-
-if (!existsSync(REGISTRY)) {
-  console.error(`✗ registry.json not found at ${REGISTRY}`);
+if (!existsSync(REGISTRY_PATH)) {
+  console.error(`✖ registry.json not found at ${REGISTRY_PATH}`);
   process.exit(1);
 }
 
-const reg = JSON.parse(readFileSync(REGISTRY, 'utf8'));
+const reg = JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'));
+const result = validateRegistry(reg);
 
-// 1. Schema integrity
-function need(obj, field, ctx) {
-  if (obj[field] === undefined) errors.push(`missing field "${field}" in ${ctx}`);
-}
-need(reg, 'version', 'root');
-need(reg, 'name', 'root');
-need(reg, 'primitives', 'root');
-need(reg, 'semantic', 'root');
-need(reg, 'flavors', 'root');
-need(reg, 'components', 'root');
-need(reg, 'axes', 'root');
-
-// 2. Resolve primitive references
-function resolveRef(value, prim) {
-  if (typeof value !== 'string') return value;
-  const m = value.match(/^\{primitives\.color\.([^}]+)\}$/);
-  if (!m) return value;
-  const v = prim?.color?.[m[1]];
-  if (!v) {
-    errors.push(`primitive ref "${m[0]}" doesn't exist`);
-    return null;
-  }
-  return v.value;
-}
-
-for (const [id, tok] of Object.entries(reg.semantic ?? {})) {
-  need(tok, 'id', `semantic.${id}`);
-  need(tok, 'type', `semantic.${id}`);
-  need(tok, 'lightValue', `semantic.${id}`);
-  need(tok, 'darkValue', `semantic.${id}`);
-  resolveRef(tok.lightValue, reg.primitives);
-  resolveRef(tok.darkValue, reg.primitives);
-}
-
-// 3. Foundation CSS drift check
-// Parse light-dark(A, B) with balanced-paren walker (rgba() etc. has commas inside).
-function parseLightDarkPair(haystack, tokenId) {
-  const start = haystack.indexOf(`--${tokenId}:`);
-  if (start < 0) return null;
-  const ldIdx = haystack.indexOf('light-dark(', start);
-  if (ldIdx < 0 || ldIdx > haystack.indexOf(';', start)) return null;
-  // Walk past 'light-dark(' to find matching close paren
-  let i = ldIdx + 'light-dark('.length;
-  let depth = 1;
-  let split = -1;
-  while (i < haystack.length && depth > 0) {
-    const ch = haystack[i];
-    if (ch === '(') depth++;
-    else if (ch === ')') depth--;
-    else if (ch === ',' && depth === 1 && split === -1) split = i;
-    i++;
-  }
-  if (depth !== 0 || split < 0) return null;
-  const closeIdx = i - 1;
-  return {
-    light: haystack.slice(ldIdx + 'light-dark('.length, split).trim(),
-    dark:  haystack.slice(split + 1, closeIdx).trim(),
-  };
-}
-
-if (existsSync(FOUNDATION)) {
-  const fs = readFileSync(FOUNDATION, 'utf8');
-  for (const [id, tok] of Object.entries(reg.semantic ?? {})) {
-    const pair = parseLightDarkPair(fs, id);
-    if (!pair) {
-      warnings.push(`foundation.css missing --${id}: light-dark(...) declaration`);
-      continue;
-    }
-    const regLight = resolveRef(tok.lightValue, reg.primitives);
-    const regDark = resolveRef(tok.darkValue, reg.primitives);
-    // Normalize whitespace for comparison
-    const norm = (s) => (s ?? '').replace(/\s+/g, '').toLowerCase();
-    if (regLight && norm(pair.light) !== norm(regLight)) {
-      errors.push(`drift on --${id} lightValue: foundation=${pair.light}  registry=${regLight}`);
-    }
-    if (regDark && norm(pair.dark) !== norm(regDark)) {
-      errors.push(`drift on --${id} darkValue: foundation=${pair.dark}  registry=${regDark}`);
-    }
-  }
-}
-
-// 4. Component manifests reference real tokens
-for (const [name, comp] of Object.entries(reg.components ?? {})) {
-  for (const tokenId of comp['tokens-read'] ?? []) {
-    if (!reg.semantic[tokenId]) {
-      errors.push(`component "${name}" reads unknown token "${tokenId}"`);
-    }
-  }
-}
-
-// 5. Legacy alias collision check
-const seenLegacy = new Map();
-for (const [id, tok] of Object.entries(reg.semantic ?? {})) {
-  for (const legacy of tok.legacy ?? []) {
-    if (seenLegacy.has(legacy)) {
-      errors.push(`legacy alias "${legacy}" claimed by both "${seenLegacy.get(legacy)}" and "${id}"`);
-    }
-    seenLegacy.set(legacy, id);
-  }
-}
-
-// Report
-console.log(`tincture-validate-registry — cycle 4`);
-console.log('');
-console.log(`  semantic tokens: ${Object.keys(reg.semantic ?? {}).length}`);
-console.log(`  flavors:         ${Object.keys(reg.flavors ?? {}).length}`);
-console.log(`  components:      ${Object.keys(reg.components ?? {}).length}`);
-console.log(`  primitives:      ${Object.keys(reg.primitives?.color ?? {}).length} colors`);
-console.log(`  legacy aliases:  ${seenLegacy.size}`);
-console.log('');
-
-if (verbose) {
-  console.log('  semantic ids:');
-  for (const id of Object.keys(reg.semantic ?? {})) console.log(`    --${id}`);
-  console.log('');
-}
-
-if (warnings.length) {
-  console.log(`  ${warnings.length} warning(s):`);
-  for (const w of warnings) console.log(`    ⚠ ${w}`);
-  console.log('');
-}
-
-if (errors.length) {
-  console.error(`  ${errors.length} error(s):`);
-  for (const e of errors) console.error(`    ✗ ${e}`);
+if (result.ok) {
+  const tokenCount = Object.keys(reg.tokens ?? {}).length;
+  console.log(`✓ ${tokenCount} token(s) — valid`);
+  process.exit(0);
+} else {
+  console.error(`✖ ${result.errors.length} validation error(s):`);
+  for (const err of result.errors) console.error(`  • ${err}`);
   process.exit(1);
 }
-
-console.log(`  ✓ valid.`);
