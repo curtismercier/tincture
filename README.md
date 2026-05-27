@@ -23,16 +23,26 @@ contrast checks before you ship. One mood delta shifts every surface together.
 ```jsonc
 // tincture/registry.json
 {
-  "semantic": {
+  "version": "0.2.2",
+  "name": "my-project/tincture",
+  "tokens": {
     "ink": {
-      "role": "text",
-      "lightValue": "#1A1A1A",
-      "darkValue": "#F0EFF4"
+      "kind": "color",
+      "axes": ["surface"],
+      "values": {
+        "default": "#1A1A1A",
+        "surface=light": "#F0EFF4"
+      },
+      "doc": "Primary text. High contrast on both surfaces."
     },
     "accent": {
-      "role": "brand",
-      "lightValue": "#0066CC",
-      "darkValue": "#00C8FF"
+      "kind": "color",
+      "axes": ["surface"],
+      "values": {
+        "default": "#00C8FF",
+        "surface=light": "#0066CC"
+      },
+      "role": "brand"
     }
   }
 }
@@ -44,7 +54,10 @@ contrast checks before you ship. One mood delta shifts every surface together.
 tincture codegen
 ```
 
-Emits `_generated/foundation.css` with the full surface-aware cascade.
+Emits `_generated/foundation.css` with cascade rules per axis-cell, plus
+`manifest.json` and `tokens.d.ts`.
+
+![Surface system — one token, four resolutions](assets/surfaces.svg)
 
 **3. Scan for gaps.**
 
@@ -56,10 +69,14 @@ tincture contrast                 # WCAG + APCA per surface pair
 
 **4. Apply a mood.**
 
+A mood is a coordinated delta across all surfaces. One file, one command.
+
 ```bash
 tincture mood list                # see available palette deltas
 tincture mood apply performance   # shift warmth, saturation, contrast
 ```
+
+![Mood engine — coordinated palette delta](assets/mood-engine.svg)
 
 **5. Visualize.**
 
@@ -109,11 +126,28 @@ Pass `--json` for machine-readable output.
 npm install @tincture/core
 ```
 
-Or use it in an existing project:
+Then scaffold a registry and generate your foundation:
 
 ```bash
 npx tincture init
 npx tincture codegen
+```
+
+Import the generated CSS in your project:
+
+```css
+@import "tincture/_generated/foundation.css";
+body { background: var(--bg); color: var(--ink); }
+```
+
+Create a `tincture.config.json` if your registry lives at a custom path:
+
+```json
+{
+  "registryPath": "src/styles/tincture/registry.json",
+  "outDir": "src/styles/tincture/_generated",
+  "moodsDir": "src/styles/tincture/moods"
+}
 ```
 
 ---
