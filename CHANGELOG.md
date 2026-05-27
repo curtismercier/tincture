@@ -10,63 +10,28 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
-- **Per-page moods** — documented and tooled. The same `--mood-*` indirection
-  layer that powers site-wide moods also activates a mood on any DOM wrapper
-  via `data-mood="X"`. Cascades through nested data-surface blocks (page +
-  navbar + footer if they're under the wrapper). No CLI invocation, no
-  registry mutation — the mood JSON ships in the bundle and the framework
-  sets the attribute when the route matches.
-  - `docs/architecture/per-page-moods.md` — full pattern, activation strategies
-    (Next.js layout / page component / per-section), partial-token discipline,
-    common pitfalls.
-  - `src/moods/per-page-example.json` — minimal 4-token template demonstrating
-    partial-token override (accent + accent-warm + accent-fg + font-display).
-  - README + `docs/MOODS.md` — sections added pointing at the new docs.
-  - First production consumer: [Arzadon Fitness](consumers/arzadon-fitness.md)'s
-    `jennifer-editorial` mood on `/about/jennifer-arzadon`. Validates the
-    pattern in production: champagne accents + DM Serif Display cascading
-    through navbar, page, and footer simultaneously, with everything
-    outside that route untouched.
-
-- `src/foundation/foundation.css` — `slate` and `steel` surface declarations.
-  `slate` (#242A36-range) for section breaks between dark content blocks;
-  `steel` (#1C1F28-range) for calculators and data-heavy interactive surfaces.
-  Both set `color-scheme: dark` — ink/accent/border tokens inherit dark-side
-  values; only bg/bg-card/bg-elev need consumer overrides.
-- `docs/architecture/light-variants.md` — light theme variant pattern.
-  Documents Mist/Whisper/Slate Ghost cool-grey palette variants, compound
-  CSS selector approach (`[data-theme="X"][data-surface="light"]`), ink colour
-  shifts for cool backgrounds, and ThemeProvider wiring.
-- `docs/architecture/theme-surface-pattern.md` — ThemeSurface component pattern.
-  Solves the server-component/client-theme gap in Next.js (and similar SSR
-  frameworks): minimal client wrapper that applies `data-surface` at runtime
-  while all children stay server-rendered. Includes when-to-use decision table.
-- `tools/tincture-lint.mjs` — static surface-correctness auditor ported from
-  Arzadon Fitness production build. Reads consumer config from `tincture.config.json`.
-  Rules: `raw-hex-section` (CRITICAL), `legacy-token`/`surface-mismatch` (HIGH),
-  `bare-section` (MEDIUM). Score: `100 - (critical×15) - (high×5) - (medium×1)`.
-  Flags: `--check` (exit 1 on C/H), `--no-demos`, `--json`.
-  Dynamic `data-surface={...}` expressions recognised as valid.
-
-### Added (continued — 2026-05-03)
-- `docs/architecture/surface-extensions-pattern.md` — the mood bridge pattern.
-  How to create a `surface-extensions.css` that re-declares surface tokens as
-  `var(--mood-TOKEN, fallback)` so mood overrides cascade through `data-surface`
-  blocks. Covers: import order, which tokens need passthrough vs which inherit
-  freely, adding surfaces outside the codegen, updating mood generators to emit
-  `--mood-*` keys. Root insight: generated CSS gets clobbered by same-specificity
-  hand-written rules later in the cascade — `surface-extensions.css` must be the
-  LAST import for its overrides to win.
-- `tools/tincture-lint.mjs` — added `--mood-border` / `--mood-border-soft` to
-  the MOOD_PASSTHROUGH set documentation (border tone is mood-relevant).
-
-  `tincture-lint-ignore` directive: add `// tincture-lint-ignore` or
-  `{/* tincture-lint-ignore */}` on the line before any intentional exception
-  (demo chrome, semantic status colours, string literals in data arrays).
+- `tincture scan-tailwind` — scan Tailwind classes for tokenization candidates
+- `tincture apply-typography` — auto-migrate heading typography to tokens
+- `tincture status` — project overview (tokens, surfaces, moods, components)
+- ANSI true-color swatches in `tokens list` and `tokens get` output
+- Color fade bars in `mood list` output
+- Per-page moods via `data-mood="X"` attribute on any DOM wrapper
+- `slate` and `steel` surface declarations in foundation.css
+- `tools/tincture-lint.mjs` — static surface-correctness auditor
+- `tincture-lint-ignore` directive for intentional exceptions
+- `docs/architecture/` — theme-surface pattern, light variants, surface extensions
 
 ### Changed
-- `src/foundation/foundation.css` — `[data-surface]` comment block expanded with
-  slate and steel use-case descriptions.
+- CLI `codegen` now uses v2 pipeline (multi-axis schema, `tokens.*.values` format)
+- CLI `validate` now wraps `schema.mjs` (the canonical v0.2 validator)
+- All `execSync` calls use consumer project CWD, not package directory
+- `contrast` command resolves registry path via `tincture.config.json`
+- Version bumped from 0.1.0 to 0.2.2 across package, README, skill, examples
+
+### Fixed
+- `codegen.mjs` dispatched to non-existent `tincture-validate-registry.mjs`
+- `contrast.mjs` fallback path never reached (dead `||` branch)
+- `execSync` CWD was set to tincture source dir instead of consumer project
 
 ---
 
