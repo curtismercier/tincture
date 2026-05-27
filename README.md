@@ -12,7 +12,7 @@ contrast checks before you ship. One mood delta shifts every surface together.
 ```
 
 **Version:** 0.2.2 · **Status:** Active  
-**npm:** `@tincture/core` · **License:** MIT
+**npm:** `curtismercier/tincture-css` · **License:** MIT
 
 ---
 
@@ -123,7 +123,7 @@ Pass `--json` for machine-readable output.
 ## Installation
 
 ```bash
-npm install @tincture/core
+npm install curtismercier/tincture-css
 ```
 
 Then scaffold a registry and generate your foundation:
