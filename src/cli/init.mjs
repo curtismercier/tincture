@@ -136,7 +136,7 @@ function walk(dir, exts = ['.tsx', '.ts'], skip = ['node_modules', '.next', '.gi
 
 const CWD = process.cwd();
 const scanDirs = [COMPONENTS_DIR, PAGES_DIR].filter(Boolean);
-const SURFACE_PATCHES = scanDirs.flatMap(walk)
+const SURFACE_PATCHES = scanDirs.flatMap(d => walk(d))
   .filter((p, i, arr) => arr.indexOf(p) === i) // dedupe
   .filter((p) => readFileSync(p, 'utf8').includes('data-tone="feature"'))
   .map((p) => ({ file: p, note: p.slice(CWD.length + 1) }));
