@@ -7,11 +7,12 @@
   "author": "Curtis Mercier",
   "homepage": "https://github.com/curtismercier/tincture",
   "keywords": ["css", "design-tokens", "tailwindcss", "next-themes", "color-scheme", "light-dark", "ai-design"],
-  "main": "./src/manifest-loader.ts",
+  "main": "./src/manifest-loader.mjs",
   "types": "./src/_generated/tokens.d.ts",
   "exports": {
     ".": {
-      "import": "./src/manifest-loader.ts"
+      "types": "./src/_generated/tokens.d.ts",
+      "import": "./src/manifest-loader.mjs"
     },
     "./foundation.css": "./src/foundation/foundation.css",
     "./flavors.css": "./src/foundation/flavors.css",
