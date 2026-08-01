@@ -2,10 +2,8 @@
 node_modules/
 
 # ── Internal: consumer integrations (project-specific) ────────────────────
-consumers/
 
 # ── Internal: development cycle history ───────────────────────────────────
-cycles/
 
 # ── Consumer config (project-local, never committed to tincture itself) ────
 
@@ -27,7 +25,6 @@ dist/
 *.tgz
 
 # ── Soma observation log ─────────────────────────────────────────────────
-log.md
 
 # ── OS / editor ───────────────────────────────────────────────────────────
 .DS_Store
@@ -42,6 +39,13 @@ README.draft*.md
 *.md.draft
 
 # ── Soma context (planning, cycles, drafts) ───────────────────────
-.soma/
 # (the cycle drafts, WIP plans, and arzadon proving-ground copies
 #  that were scattered across root/scripts/references now live here
+
+# ── NOTE (s01-8b4389) ────────────────────────────────────────────────────────
+# Rules for .soma/, cycles/, consumers/ and log.md were REMOVED, not relaxed.
+# The repo root moved down one level: those directories now live in the PARENT
+# (tincture-css/), physically outside this repo. The separation is structural
+# rather than rule-based, so an ignore entry protecting them would be a rule
+# guarding something git can no longer see -- and a rule that cannot fire reads
+# as protection that isn't there.
