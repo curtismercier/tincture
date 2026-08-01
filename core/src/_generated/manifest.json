@@ -1,0 +1,468 @@
+{
+  "schemaVersion": "2.0",
+  "registry": {
+    "version": "0.2.2",
+    "name": "tincture/v0.2-example",
+    "doc": "Example registry exercising the multi-axis schema. Used by tests/test-schema.mjs as the reference good registry. Mirrors the cycles/v02-scope.md examples."
+  },
+  "axes": [
+    "surface",
+    "flavor",
+    "tone",
+    "elevation"
+  ],
+  "tokens": {
+    "accent": {
+      "kind": "color",
+      "axes": [
+        "surface",
+        "flavor"
+      ],
+      "locked": false,
+      "doc": "Primary accent. Saturated red on dark, deep crimson on light.",
+      "defaultValue": "#C41E3A",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#C41E3A",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "#E82E11",
+          "selector": "[data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "accent-fg": {
+      "kind": "color",
+      "axes": [],
+      "locked": false,
+      "doc": "Ink color on accent backgrounds. Surface-invariant white.",
+      "defaultValue": "#FFFFFF",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#FFFFFF",
+          "selector": ":root"
+        }
+      ]
+    },
+    "bg": {
+      "kind": "color",
+      "axes": [
+        "surface",
+        "flavor"
+      ],
+      "locked": false,
+      "doc": "Page background. Surface + flavor aware.",
+      "defaultValue": "#F7F4F0",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#F7F4F0",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "#12151C",
+          "selector": "[data-surface=\"dark\"]"
+        },
+        {
+          "cell": "flavor=ember,surface=dark",
+          "value": "#1F1A14",
+          "selector": "[data-flavor=\"ember\"][data-surface=\"dark\"]"
+        },
+        {
+          "cell": "flavor=warm,surface=dark",
+          "value": "#1A1612",
+          "selector": "[data-flavor=\"warm\"][data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "brand-mark-primary": {
+      "kind": "brand-lock",
+      "axes": [],
+      "locked": true,
+      "doc": "Brand primary mark. Immutable — moods cannot override.",
+      "defaultValue": "#EF4123",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#EF4123",
+          "selector": ":root"
+        }
+      ]
+    },
+    "brand-mark-secondary": {
+      "kind": "brand-lock",
+      "axes": [],
+      "locked": true,
+      "doc": "",
+      "defaultValue": "#B82339",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#B82339",
+          "selector": ":root"
+        }
+      ]
+    },
+    "focus-ring": {
+      "kind": "shadow",
+      "axes": [],
+      "locked": false,
+      "doc": "Composed focus ring. Two-layer box-shadow: inner halo of --bg + outer ring of --focus-ring-color. Resolves at consumer scope so it adopts whatever surface it sits on.",
+      "defaultValue": "0 0 0 var(--focus-ring-offset) var(--bg), 0 0 0 calc(var(--focus-ring-offset) + 2px) var(--focus-ring-color)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "0 0 0 var(--focus-ring-offset) var(--bg), 0 0 0 calc(var(--focus-ring-offset) + 2px) var(--focus-ring-color)",
+          "selector": ":root"
+        }
+      ]
+    },
+    "focus-ring-color": {
+      "kind": "color",
+      "axes": [],
+      "locked": false,
+      "doc": "Color of the designed focus ring. ~45% accent so it reads on any surface without overpowering. Brands should override this with their accent color at 45% opacity.",
+      "defaultValue": "rgba(99, 102, 241, 0.45)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "rgba(99, 102, 241, 0.45)",
+          "selector": ":root"
+        }
+      ]
+    },
+    "focus-ring-offset": {
+      "kind": "spacing",
+      "axes": [],
+      "locked": false,
+      "doc": "Gap between focusable element and the focus ring. Inner halo of bg color.",
+      "defaultValue": "2px",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "2px",
+          "selector": ":root"
+        }
+      ]
+    },
+    "ink": {
+      "kind": "color",
+      "axes": [
+        "surface",
+        "flavor"
+      ],
+      "locked": false,
+      "doc": "Primary text color. Surface-aware luminance, flavor-aware hue.",
+      "defaultValue": "#1A1612",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#1A1612",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "#FFFFFF",
+          "selector": "[data-surface=\"dark\"]"
+        },
+        {
+          "cell": "flavor=ember,surface=dark",
+          "value": "#FAFAF8",
+          "selector": "[data-flavor=\"ember\"][data-surface=\"dark\"]"
+        },
+        {
+          "cell": "flavor=warm,surface=dark",
+          "value": "#FAF7F2",
+          "selector": "[data-flavor=\"warm\"][data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "ink-soft": {
+      "kind": "color",
+      "axes": [
+        "surface"
+      ],
+      "locked": false,
+      "doc": "Secondary text. Body copy, captions.",
+      "defaultValue": "#4A4540",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "#4A4540",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "#B8B8C4",
+          "selector": "[data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "leading-tight": {
+      "kind": "typography",
+      "axes": [],
+      "locked": false,
+      "doc": "",
+      "defaultValue": "1.1",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "1.1",
+          "selector": ":root"
+        }
+      ]
+    },
+    "motion-easing": {
+      "kind": "motion",
+      "axes": [],
+      "locked": false,
+      "doc": "Default easing curve for site-wide motion. Exit-ease (cubic-bezier(0.16, 1, 0.3, 1)) feels premium — fast start, slow settle.",
+      "defaultValue": "cubic-bezier(0.16, 1, 0.3, 1)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "selector": ":root"
+        }
+      ]
+    },
+    "motion-fast": {
+      "kind": "motion",
+      "axes": [],
+      "locked": false,
+      "doc": "Micro-interaction duration. Hover, focus-visible, dropdown open/close. Premium feel = consistent timing.",
+      "defaultValue": "150ms",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "150ms",
+          "selector": ":root"
+        }
+      ]
+    },
+    "motion-medium": {
+      "kind": "motion",
+      "axes": [],
+      "locked": false,
+      "doc": "Page-level transitions, route changes, panel slides. Slightly slower than --motion-fast for larger movements.",
+      "defaultValue": "220ms",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "220ms",
+          "selector": ":root"
+        }
+      ]
+    },
+    "motion-snap": {
+      "kind": "motion",
+      "axes": [],
+      "locked": false,
+      "doc": "",
+      "defaultValue": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+          "selector": ":root"
+        }
+      ]
+    },
+    "radius-pill": {
+      "kind": "radius",
+      "axes": [],
+      "locked": false,
+      "doc": "",
+      "defaultValue": "9999px",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "9999px",
+          "selector": ":root"
+        }
+      ]
+    },
+    "radius-soft": {
+      "kind": "radius",
+      "axes": [],
+      "locked": false,
+      "doc": "",
+      "defaultValue": "12px",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "12px",
+          "selector": ":root"
+        }
+      ]
+    },
+    "shadow-card": {
+      "kind": "shadow",
+      "axes": [
+        "surface"
+      ],
+      "locked": false,
+      "doc": "Soft layered shadow for cards (Linear/Stripe-style). Pairs with --border for definition. Subtle on light, heavier on dark.",
+      "defaultValue": "0 1px 3px rgba(15, 20, 30, 0.04), 0 1px 2px rgba(15, 20, 30, 0.03)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "0 1px 3px rgba(15, 20, 30, 0.04), 0 1px 2px rgba(15, 20, 30, 0.03)",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)",
+          "selector": "[data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "shadow-card-hover": {
+      "kind": "shadow",
+      "axes": [
+        "surface"
+      ],
+      "locked": false,
+      "doc": "Card lift on hover/active. Slightly stronger than --shadow-card.",
+      "defaultValue": "0 4px 12px rgba(15, 20, 30, 0.06), 0 1px 3px rgba(15, 20, 30, 0.04)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "0 4px 12px rgba(15, 20, 30, 0.06), 0 1px 3px rgba(15, 20, 30, 0.04)",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "0 8px 24px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4)",
+          "selector": "[data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "shadow-lifted": {
+      "kind": "shadow",
+      "axes": [
+        "surface",
+        "elevation"
+      ],
+      "locked": false,
+      "doc": "Card / elevated surface shadow. Heavier on dark, even more dramatic at elevation=dramatic.",
+      "defaultValue": "0 8px 24px rgba(0,0,0,0.08)",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "0 8px 24px rgba(0,0,0,0.08)",
+          "selector": ":root"
+        },
+        {
+          "cell": "elevation=dramatic",
+          "value": "0 24px 64px rgba(0,0,0,0.16)",
+          "selector": "[data-elevation=\"dramatic\"]"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "0 8px 24px rgba(0,0,0,0.4)",
+          "selector": "[data-surface=\"dark\"]"
+        },
+        {
+          "cell": "elevation=dramatic,surface=dark",
+          "value": "0 24px 64px rgba(0,0,0,0.6)",
+          "selector": "[data-elevation=\"dramatic\"][data-surface=\"dark\"]"
+        }
+      ]
+    },
+    "space-rhythm": {
+      "kind": "spacing",
+      "axes": [],
+      "locked": false,
+      "doc": "",
+      "defaultValue": "1.5rem",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "1.5rem",
+          "selector": ":root"
+        }
+      ]
+    },
+    "space-section": {
+      "kind": "spacing",
+      "axes": [
+        "tone"
+      ],
+      "locked": false,
+      "doc": "Vertical padding on sections. Feature sections breathe more; brand-bands are tight.",
+      "defaultValue": "5rem",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "5rem",
+          "selector": ":root"
+        },
+        {
+          "cell": "tone=brand-band",
+          "value": "4rem",
+          "selector": "[data-tone=\"brand-band\"]"
+        },
+        {
+          "cell": "tone=feature",
+          "value": "8rem",
+          "selector": "[data-tone=\"feature\"]"
+        }
+      ]
+    },
+    "track-display": {
+      "kind": "typography",
+      "axes": [],
+      "locked": false,
+      "doc": "",
+      "defaultValue": "-0.02em",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "-0.02em",
+          "selector": ":root"
+        }
+      ]
+    },
+    "weight-body": {
+      "kind": "typography",
+      "axes": [],
+      "locked": false,
+      "doc": "Body copy weight.",
+      "defaultValue": "400",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "400",
+          "selector": ":root"
+        }
+      ]
+    },
+    "weight-display": {
+      "kind": "typography",
+      "axes": [
+        "surface"
+      ],
+      "locked": false,
+      "doc": "Display headline weight. Heavier on dark surfaces for legibility.",
+      "defaultValue": "700",
+      "cells": [
+        {
+          "cell": "default",
+          "value": "700",
+          "selector": ":root"
+        },
+        {
+          "cell": "surface=dark",
+          "value": "800",
+          "selector": "[data-surface=\"dark\"]"
+        }
+      ]
+    }
+  }
+}

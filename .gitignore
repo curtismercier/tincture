@@ -17,10 +17,12 @@ tincture.config.json
 tincture.config.local.json
 
 # ── Build artefacts ────────────────────────────────────────────────────────
-# _generated/ contains codegen output that references consumer project paths.
-# The source files (foundation.css, schema.mjs) are what's public.
-src/_generated/
-src/_generated-v2/
+# core/src/_generated/ is COMMITTED (distribution is clone/CDN, not npm — a fresh
+# clone must be complete, and a CDN can only serve files that are in the repo).
+# It is generated from the TRACKED example registry — never from a consumer
+# registry, which would leak consumer paths. Regenerate with:
+#   node core/src/cli/codegen.mjs --registry core/src/registry.v02-example.json --out core/src/_generated --quiet
+core/src/_generated-v2/
 dist/
 *.tgz
 

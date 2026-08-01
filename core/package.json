@@ -26,7 +26,7 @@
     "test": "node src/cli/validate.mjs && node src/cli/contrast.mjs",
     "codegen": "node src/cli/codegen.mjs"
   },
-  "files": ["src/", "README.md", "LICENSE"],
+  "files": ["src/"],
   "sideEffects": false,
   "engines": { "node": ">=18.0.0" },
   "publishConfig": { "access": "public" }
