@@ -17,6 +17,6 @@ export type Axes = Partial<Record<'surface' | 'flavor' | 'tone' | 'elevation', s
 
 export function normalizeMood(mood: Mood): { id: string; tokens: Record<string, MoodCells> };
 export function moodVars(mood: Mood, axes?: Axes): MoodVars;
-export function moodCss(mood: Mood, opts?: { selector?: string }): string;
+export function moodCss(mood: Mood, opts?: { selector?: string; attributes?: Record<string, string> }): string;
 export function applyMood(el: HTMLElement, mood: Mood, axes?: Axes): MoodVars;
 export function clearMood(el: HTMLElement, mood: Mood): void;

@@ -105,11 +105,14 @@ export function moodVars(mood, axes = {}) {
  * Non-default cells are emitted twice — on the wrapper itself and on descendants — so a
  * wrapper that IS the surfaced element and one that CONTAINS surfaced blocks both work.
  * @param {object} mood
- * @param {{ selector?: string }} [opts]  default `[data-mood="<id>"]`
+ * @param {{ selector?: string, attributes?: Record<string,string> }} [opts]
+ *   selector — default `[data-mood="<id>"]`; attributes — the registry's `axis-attributes`
+ *   (e.g. `{ surface: 'data-theme' }`), so the blocks key on the same attribute the foundation does.
  */
 export function moodCss(mood, opts = {}) {
   const { id, tokens } = normalizeMood(mood);
   const selector = opts.selector || `[data-mood="${id}"]`;
+  const attributes = opts.attributes || {};
   const byCell = new Map(); // cellKey → [[id, value]]
   for (const [tokenId, cells] of Object.entries(tokens)) {
     for (const [cell, value] of Object.entries(cells)) {
@@ -119,7 +122,7 @@ export function moodCss(mood, opts = {}) {
   }
   const lines = [`/* tincture mood: ${id} */`];
   for (const cell of sortCellKeys([...byCell.keys()])) {
-    const attrs = Object.entries(parseCell(cell)).map(([a, v]) => `[data-${a}="${v}"]`).join('');
+    const attrs = Object.entries(parseCell(cell)).map(([a, v]) => `[${attributes[a] || `data-${a}`}="${v}"]`).join('');
     const sel = cell === 'default' ? selector : `${selector}${attrs}, ${selector} ${attrs}`;
     lines.push(`${sel} {`);
     for (const [tokenId, value] of byCell.get(cell).sort(([a], [b]) => a.localeCompare(b))) {

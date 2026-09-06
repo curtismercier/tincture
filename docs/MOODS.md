@@ -82,6 +82,11 @@ applyMood(document.documentElement, warm, { surface: 'dark' });
 clearMood(document.documentElement, warm);
 ```
 
+**Already switching on another attribute?** `"axis-attributes": { "surface": "data-theme" }` in the
+registry keys that axis's cells on `[data-theme=…]` instead of `[data-surface=…]` — codegen,
+manifest selectors and `moodCss(mood, { attributes })` all follow it. An app keeps its existing
+switch; nothing else changes.
+
 Accepts both mood shapes (`values` cells, or `lightValue`/`darkValue`). **A mood with no
 tokens is a visual no-op** — every `var()` takes its fallback, byte-for-byte the un-mooded
 foundation. Validate moods against the registry at build time (`schema.validateMood`); the

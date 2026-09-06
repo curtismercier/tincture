@@ -57,6 +57,7 @@ ok('css dark block on wrapper AND descendant',
 ok('css 2-axis block after 1-axis',
    css.indexOf('[data-surface="dark"] {') < css.indexOf('[data-flavor="warm"][data-surface="dark"]'));
 ok('css custom selector', moodCss(v01, { selector: 'html' }).startsWith('/* tincture mood: v01 */\nhtml {'));
+ok('css axis attribute alias', moodCss(v01, { attributes: { surface: 'data-theme' } }).includes('[data-mood="v01"][data-theme="dark"], [data-mood="v01"] [data-theme="dark"] {'));
 ok('css dark block carries ink', /\[data-surface="dark"\] \{\n(  --mood-[a-z-]+: [^;]+;\n)*  --mood-ink: #fff;/.test(css));
 
 // ── 4. applyMood / clearMood on a fake element ───────────────────────
@@ -135,6 +136,16 @@ ok('--no-runtime-moods flag turns it off', !forcedOff.css.includes('--mood-'));
 // idempotent with the flag on
 const on2 = gen('on2', regOn);
 ok('on: idempotent', on.css === on2.css);
+
+// axis-attributes alias: the surface axis keyed on data-theme
+const regAlias = resolve(OUT, 'registry-alias.json');
+writeFileSync(regAlias, JSON.stringify({ ...reg, 'axis-attributes': { surface: 'data-theme' } }, null, 2));
+const alias = gen('alias', regAlias);
+ok('alias: surface cells keyed on data-theme', alias.css.includes('[data-theme="dark"] {') && !alias.css.includes('[data-surface="dark"]'));
+ok('alias: other axes untouched', alias.css.includes('[data-tone="feature"] {'));
+ok('alias: compound cell uses the alias', alias.css.includes('[data-flavor="warm"][data-theme="dark"] {'));
+ok('alias: manifest records it', alias.manifest.registry.axisAttributes?.surface === 'data-theme' && alias.manifest.tokens.ink.cells.some(c => c.selector === '[data-theme="dark"]'));
+ok('no alias: manifest carries no axisAttributes key', !('axisAttributes' in off.manifest.registry));
 
 rmSync(OUT, { recursive: true });
 

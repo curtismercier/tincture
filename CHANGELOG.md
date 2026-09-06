@@ -15,6 +15,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Off by default — existing output is unchanged.
 - `@tincture/core/runtime`: `moodVars(mood, axes)`, `moodCss(mood)`, `applyMood(el, mood, axes)`,
   `clearMood(el, mood)`. Accepts v0.1 and v0.2 mood shapes.
+- Registry `"axis-attributes": { "<axis>": "<attr>" }` keys an axis's cells on an existing
+  attribute (e.g. `data-theme`); codegen, manifest selectors and `moodCss({ attributes })` follow it.
 - `tests/test-runtime-mood.mjs`. `npm test` runs the three test suites; `npm run check` runs
   validate + contrast against a consumer registry.
 
