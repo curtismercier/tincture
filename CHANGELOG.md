@@ -7,6 +7,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.3.0] — 2026-09-06
+
+### Added
+- Runtime moods: registry `"runtime-moods": true` (or `codegen --runtime-moods`) emits every
+  unlocked token as `--id: var(--mood-id, <value>)` in every axis cell; locked tokens stay raw.
+  Off by default — existing output is unchanged.
+- `@tincture/core/runtime`: `moodVars(mood, axes)`, `moodCss(mood)`, `applyMood(el, mood, axes)`,
+  `clearMood(el, mood)`. Accepts v0.1 and v0.2 mood shapes.
+- `tests/test-runtime-mood.mjs`. `npm test` runs the three test suites; `npm run check` runs
+  validate + contrast against a consumer registry.
+
+### Changed
+- `codegen.mjs` and `codegen-v2.mjs` share one emitter (`src/codegen-core.mjs`).
+- Manifest carries `registry.runtimeMoods: true` when the flag is on.
+
 ## [Unreleased]
 
 ### Added

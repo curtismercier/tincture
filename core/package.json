@@ -1,6 +1,6 @@
 {
   "name": "@tincture/core",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A drop changes the whole pour. Surface-aware design substrate for AI-mediated theming.",
   "type": "module",
   "license": "MIT",
@@ -14,6 +14,10 @@
       "types": "./src/_generated/tokens.d.ts",
       "import": "./src/manifest-loader.mjs"
     },
+    "./runtime": {
+      "types": "./src/runtime/mood.d.ts",
+      "import": "./src/runtime/mood.mjs"
+    },
     "./foundation.css": "./src/foundation/foundation.css",
     "./flavors.css": "./src/foundation/flavors.css",
     "./_generated/tokens.css": "./src/_generated/foundation.css",
@@ -23,7 +27,8 @@
     "tincture": "src/cli/tincture.mjs"
   },
   "scripts": {
-    "test": "node src/cli/validate.mjs && node src/cli/contrast.mjs",
+    "test": "node tests/test-schema.mjs && node tests/test-codegen.mjs && node tests/test-runtime-mood.mjs",
+    "check": "node src/cli/validate.mjs && node src/cli/contrast.mjs",
     "codegen": "node src/cli/codegen.mjs"
   },
   "files": ["src/"],

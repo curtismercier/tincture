@@ -1,5 +1,12 @@
 # surface-extensions.css — the mood bridge pattern
 
+> **Since 0.3.0 the codegen emits this bridge itself.** Set `"runtime-moods": true` in the
+> registry (or pass `--runtime-moods`) and every unlocked token in every cell is emitted as
+> `--id: var(--mood-id, <value>)`. The hand-maintained block below is then only needed for
+> **surfaces the registry does not declare** (§ Adding surfaces). Apply moods with
+> `@tincture/core/runtime` (`moodVars` / `moodCss` / `applyMood`) — see `docs/MOODS.md` § Runtime.
+> Consumers that keep a hand-written bridge get identical behaviour; nothing breaks.
+
 ## The problem
 
 The tincture codegen outputs `_generated/foundation.css` from a token registry.
@@ -102,9 +109,9 @@ const cssVar = MOOD_PASSTHROUGH.has(tokenId)
 
 | File | Owned by | Purpose |
 |------|----------|---------|
-| `_generated/foundation.css` | Codegen | Base `:root` tokens |
+| `_generated/foundation.css` | Codegen | Base `:root` tokens — and the mood bridge when `runtime-moods` is on |
 | `_generated/flavors.css` | Codegen | Flavor overrides |
-| `surface-extensions.css` | Hand-maintained | Mood bridge + new surfaces |
+| `surface-extensions.css` | Hand-maintained | New surfaces (+ the mood bridge only for pre-0.3 registries) |
 | `globals.css` | Hand-maintained | Import order + project tokens |
 
 ## See also

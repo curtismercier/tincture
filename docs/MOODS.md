@@ -45,6 +45,48 @@ Then `npx tincture mood apply my-mood`.
 npx tincture mood diff clinical editorial-warm
 ```
 
+## Runtime moods (no CLI, no build) — 0.3.0
+
+Turn the indirection on in the registry and the generated foundation resolves every unlocked
+token through `var(--mood-<id>, <value>)`, in every axis cell:
+
+```jsonc
+// tincture/registry.json
+{ "version": "0.3.0", "runtime-moods": true, "tokens": { … } }
+```
+
+```css
+/* _generated/foundation.css — emitted */
+:root                 { --accent: var(--mood-accent, #C41E3A); }
+[data-surface="dark"] { --accent: var(--mood-accent, #FA4020); }
+```
+
+Now a mood is just `--mood-*` custom properties on an ancestor. Nested `[data-surface]`
+blocks keep resolving underneath it instead of stomping it. Locked (`brand-lock`) tokens are
+emitted raw — moods cannot override them, so there is nothing to indirect. Off by default;
+`--runtime-moods` / `--no-runtime-moods` on `tincture codegen` override the registry field.
+
+`@tincture/core/runtime` turns a mood JSON into those properties three ways:
+
+```js
+import { moodVars, moodCss, applyMood, clearMood } from '@tincture/core/runtime';
+
+// SSR / React: the layout already knows the surface → one cell, as a style object
+<html data-surface={mode} style={moodVars(warm, { surface: mode })}>
+
+// Every cell at once, as CSS under [data-mood="warm"] (wrapper AND descendant forms)
+<style>{moodCss(warm)}</style>   …   <main data-mood="warm">
+
+// DOM: set / unset on an element
+applyMood(document.documentElement, warm, { surface: 'dark' });
+clearMood(document.documentElement, warm);
+```
+
+Accepts both mood shapes (`values` cells, or `lightValue`/`darkValue`). **A mood with no
+tokens is a visual no-op** — every `var()` takes its fallback, byte-for-byte the un-mooded
+foundation. Validate moods against the registry at build time (`schema.validateMood`); the
+runtime does not re-check locks.
+
 ## Per-page activation (no CLI, runtime)
 
 The CLI applies a mood site-wide by mutating the registry. There's a second

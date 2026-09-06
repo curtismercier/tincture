@@ -11,7 +11,7 @@ contrast checks before you ship. One mood delta shifts every surface together.
 + color: var(--promo-text);      /* deep orange light, gold dark, math-checked both */
 ```
 
-**Version:** 0.2.2 · **Status:** Active  
+**Version:** 0.3.0 · **Status:** Active  
 **npm:** `curtismercier/tincture-css` · **License:** MIT
 
 ---
@@ -55,7 +55,9 @@ tincture codegen
 ```
 
 Emits `_generated/foundation.css` with cascade rules per axis-cell, plus
-`manifest.json` and `tokens.d.ts`.
+`manifest.json` and `tokens.d.ts`. Add `"runtime-moods": true` to the registry and every
+unlocked token is emitted as `var(--mood-<id>, <value>)` — moods then apply at runtime with
+no build (`@tincture/core/runtime`; see `docs/MOODS.md` § Runtime moods).
 
 ![Surface system — one token, four resolutions](assets/surfaces.svg)
 

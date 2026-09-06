@@ -10,7 +10,7 @@ description: >
 license: MIT
 metadata:
   author: curtismercier
-  version: "0.2.2"
+  version: "0.3.0"
   source-style: authored
   home-repo: curtismercier/tincture-css
   created: 2026-04-30
