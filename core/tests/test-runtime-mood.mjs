@@ -147,6 +147,19 @@ ok('alias: compound cell uses the alias', alias.css.includes('[data-flavor="warm
 ok('alias: manifest records it', alias.manifest.registry.axisAttributes?.surface === 'data-theme' && alias.manifest.tokens.ink.cells.some(c => c.selector === '[data-theme="dark"]'));
 ok('no alias: manifest carries no axisAttributes key', !('axisAttributes' in off.manifest.registry));
 
+// default-surface: the :root cell's color-scheme follows it
+const regDark = resolve(OUT, 'registry-dark.json');
+writeFileSync(regDark, JSON.stringify({ ...reg, 'default-surface': 'dark' }, null, 2));
+const dark = gen('dark-default', regDark);
+ok('default-surface=dark: :root color-scheme dark', /:root \{\n  color-scheme: dark;/.test(dark.css));
+ok('default-surface=dark: surface=light cell still light', /\[data-surface="light"\] \{\n  color-scheme: light;/.test(dark.css));
+ok('default-surface unset: :root color-scheme light', /:root \{\n  color-scheme: light;/.test(off.css));
+ok('default-surface=dark: manifest records it', dark.manifest.registry.defaultSurface === 'dark');
+const regBad = resolve(OUT, 'registry-bad.json');
+writeFileSync(regBad, JSON.stringify({ ...reg, 'default-surface': 'steel' }, null, 2));
+let badThrew = false; try { execSync(`node ${resolve(ROOT, 'src/cli/codegen.mjs')} --registry ${regBad} --out ${resolve(OUT, 'bad')} --quiet`, { cwd: ROOT, stdio: 'pipe' }); } catch { badThrew = true; }
+ok('default-surface invalid: codegen refuses', badThrew);
+
 rmSync(OUT, { recursive: true });
 
 console.log(`\n\n${passed} passed, ${failed} failed.`);

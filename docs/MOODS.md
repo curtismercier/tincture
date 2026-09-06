@@ -82,6 +82,10 @@ applyMood(document.documentElement, warm, { surface: 'dark' });
 clearMood(document.documentElement, warm);
 ```
 
+**Is your `:root` tuned for dark?** `"default-surface": "dark"` makes the `:root` cell emit
+`color-scheme: dark` (light unless declared), so an element outside every `[data-surface]` gets
+form controls and scrollbars that match the colours it actually carries.
+
 **Already switching on another attribute?** `"axis-attributes": { "surface": "data-theme" }` in the
 registry keys that axis's cells on `[data-theme=…]` instead of `[data-surface=…]` — codegen,
 manifest selectors and `moodCss(mood, { attributes })` all follow it. An app keeps its existing
