@@ -206,3 +206,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 [0.2.0]: https://github.com/curtismercier/tincture-css/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/curtismercier/tincture-css/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/curtismercier/tincture-css/releases/tag/v0.1.0
+
+## [Unreleased]
+
+### Known gaps (found by the yoshi dashboard, the second consumer — 2026-09-06)
+- `contrast --check` pairs foreground × background by NAME heuristic (every ink × every bg), so it
+  fails pairs a UI never composes; consumers keep their own pair list until the registry can declare
+  pairs (e.g. a `pairs:` block, or `role:`/`on:` fields per token).
+- `scan` targets Tailwind/JSX `data-surface` annotations; an inline-style app gets nothing from it.
